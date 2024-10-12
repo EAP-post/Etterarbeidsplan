@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NRK POST - Etterarbeidsplan</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7fafc;
+            padding: 20px;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: auto;
+            color: #333;
+        }
+
+        h1, h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        /* Minimalistisk header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            margin-bottom: 40px;
+            border-bottom: 2px solid #3498db; /* Tynn blå linje */
+        }
+
+        .header .left-text {
+            font-size: 26px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .header .middle-text {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* Knapper */
+        .download-button, .slack-button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-left: 15px;
+            transition: background-color 0.3s ease;
+        }
+
+        .download-button:hover, .slack-button:hover {
+            background-color: #2980b9;
+        }
+
+        .button-container {
+            display: flex;
+            align-items: center;
+        }
+
+        /* Justere spacing for input-feltene */
+        .title-section {
+            margin-bottom: 20px;
+        }
+
+        .title-section input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 18px;
+        }
+
+        .date-info {
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 10px; /* Avstand mellom feltene */
+        }
+
+        .date-info label {
+            font-size: 16px;
+            color: #333;
+        }
+
+        input[type="date"], input[type="number"], input[type="text"] {
+            width: 130px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-top: 5px;
+            font-size: 16px;
+        }
+
+        /* Layout for oppsummeringsseksjonen */
+        .summary {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            display: flex;
+            justify-content: space-between;
+            background-color: #f7fafc;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .summary input {
+            font-size: 18px;
+            font-weight: bold;
+            width: 150px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            text-align: center;
+            margin-left: 10px;
+        }
+
+        /* Generell styling for tabeller */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 40px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .editable-task {
+            background-color: #f7fafc;
+            color: #333;
+            padding: 8px;
+            border-radius: 5px;
+            width: 90%;
+            text-align: center;
+            border: 1px solid #ccc;
+            font-weight: bold;
+        }
+
+        .comment-cell input {
+            width: 90%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Øverst med NRK POST KLIPPEPLAN -->
+    <div class="header">
+        <div class="left-text">NRK POST</div>
+        <div class="middle-text">KLIPPEPLAN</div>
+        <div class="button-container">
+            <a href="https://slack.com/" target="_blank">
+                <button class="slack-button">Slack</button>
+            </a>
+            <button class="download-button" id="download-pdf">Last ned PDF</button>
+        </div>
+    </div>
+
+    <!-- Tittel seksjon for Klippeplan og Serie-tittel -->
+    <div class="title-section">
+        <input type="text" id="tv-title" placeholder="Skriv inn tittel på serien">
+    </div>
+
+    <!-- Klippeperiode på én linje -->
+    <div class="date-info">
+        <label for="clip-start">Klippe periode: </label>
+        <input type="date" id="clip-start" value="2024-10-21" class="small-input"> til 
+        <input type="date" id="clip-end" value="2025-01-31" class="small-input" readonly>
+    </div>
+
+    <!-- Antall episoder, Episode lengde og TIM på én linje horisontalt -->
+    <div class="date-info">
+        <label for="episodes">Ant. eps:</label>
+        <input type="number" id="episodes" value="8" min="1" class="small-input">
+
+        <label for="episode-length">Eps. lengde (min):</label>
+        <input type="number" id="episode-length" value="20" min="1" class="small-input">
+
+        <label for="hours-per-day">TIM:</label>
+        <input type="number" id="hours-per-day" value="7.5" min="1" step="0.1" class="small-input">
+    </div>
+
+    <!-- Klipper 1 og Klipper 2 navn -->
+    <div class="date-info">
+        <div>
+            <label for="cutter1-name">Klipper 1:</label>
+            <input type="text" id="cutter1-name" value="Klipper 1">
+        </div>
+        <div>
+            <label for="cutter1-episodes">Antall episoder Klipper 1:</label>
+            <input type="number" id="cutter1-episodes" value="4" min="0" class="small-input">
+        </div>
+    </div>
+
+    <div class="date-info">
+        <div>
+            <label for="cutter2-name">Klipper 2:</label>
+            <input type="text" id="cutter2-name" value="Klipper 2">
+        </div>
+        <div>
+            <label for="cutter2-episodes">Antall episoder Klipper 2:</label>
+            <input type="number" id="cutter2-episodes" value="4" min="0" class="small-input" readonly>
+        </div>
+    </div>
+
+    <!-- Varsling hvis for mange vakter brukes -->
+    <div class="warning" id="shift-warning" style="color: red; margin-top: 20px;">Overforbruk av klippevakter! Juster antall episoder eller episodelengde.</div>
+
+    <!-- Oppsummering av vakter og kostnad -->
+    <div class="summary">
+        <div>Ant.vakter: <input type="number" id="total-shifts" value="0" readonly></div>
+        <div>Kalkyle: <input type="text" id="total-cost" value="0" readonly> NOK</div>
+    </div>
+
+    <!-- Klippere seksjon -->
+    <div class="function-section" id="cutter-section-1">
+        <div class="function-heading" id="cutter1-heading">Klipper 1</div>
+        <table id="cutter-table-1">
+            <thead>
+                <tr>
+                    <th style="width: 10%;">Uke</th>
+                    <th style="width: 15%;">Navn</th>
+                    <th style="width: 10%;">Episode</th>
+                    <th style="width: 20%;">Oppstart</th>
+                    <th style="width: 20%;">Sluttdato</th>
+                    <th style="width: 25%;">Kommentar</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div class="function-section" id="cutter-section-2">
+        <div class="function-heading" id="cutter2-heading">Klipper 2</div>
+        <table id="cutter-table-2">
+            <thead>
+                <tr>
+                    <th style="width: 10%;">Uke</th>
+                    <th style="width: 15%;">Navn</th>
+                    <th style="width: 10%;">Episode</th>
+                    <th style="width: 20%;">Oppstart</th>
+                    <th style="width: 20%;">Sluttdato</th>
+                    <th style="width: 25%;" class="comment-cell">Kommentar</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- Lyddesign seksjon -->
+    <div class="function-section" id="lyddesign-section">
+        <div class="function-heading">Lyddesign</div>
+        <table id="lyddesign-table">
+            <thead>
+                <tr>
+                    <th style="width: 10%;">Uke</th>
+                    <th style="width: 15%;">Navn</th>
+                    <th style="width: 10%;">Episode</th>
+                    <th style="width: 20%;">Oppstart</th>
+                    <th style="width: 20%;">Sluttdato</th>
+                    <th style="width: 25%;">Kommentar</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- Grade seksjon -->
+    <div class="function-section" id="grade-section">
+        <div class="function-heading">Grade</div>
+        <table id="grade-table">
+            <thead>
+                <tr>
+                    <th style="width: 10%;">Uke</th>
+                    <th style="width: 15%;">Navn</th>
+                    <th style="width: 10%;">Episode</th>
+                    <th style="width: 20%;">Oppstart</th>
+                    <th style="width: 20%;">Sluttdato</th>
+                    <th style="width: 25%;">Kommentar</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- VFX seksjon -->
+    <div class="function-section" id="vfx-section">
+        <div class="function-heading">VFX</div>
+        <table id="vfx-table">
+            <thead>
+                <tr>
+                    <th style="width: 10%;">Uke</th>
+                    <th style="width: 15%;">Navn</th>
+                    <th style="width: 10%;">Episode</th>
+                    <th style="width: 20%;">Oppstart</th>
+                    <th style="width: 20%;">Sluttdato</th>
+                    <th style="width: 25%;">Kommentar</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- Last ned PDF knapp nederst -->
+    <button id="download-pdf-bottom" class="download-button">Last ned PDF</button>
+
+    <script>
+        const hourlyRate = 700;
+        const episodeData = {}; // Lagre kommentarer og annen informasjon for hver episode
+
+        document.getElementById("clip-start").addEventListener("change", updateClipPeriod);
+        document.getElementById("episodes").addEventListener("input", adjustEpisodes);
+        document.getElementById("episode-length").addEventListener("input", updateClipPeriod);
+        document.getElementById("hours-per-day").addEventListener("input", updateClipPeriod);
+
+        document.getElementById("cutter1-episodes").addEventListener("input", adjustEpisodes);
+        document.getElementById("cutter1-name").addEventListener("input", updateCutterNames);
+        document.getElementById("cutter2-name").addEventListener("input", updateCutterNames);
+
+        function adjustEpisodes() {
+            const totalEpisodes = parseInt(document.getElementById("episodes").value);
+            const cutter1Episodes = parseInt(document.getElementById("cutter1-episodes").value);
+
+            if (cutter1Episodes > totalEpisodes) {
+                alert("Antall episoder kan ikke overstige totalt antall episoder.");
+                document.getElementById("cutter1-episodes").value = totalEpisodes;
+            }
+
+            const cutter2Episodes = totalEpisodes - cutter1Episodes;
+            document.getElementById("cutter2-episodes").value = cutter2Episodes;
+
+            updateClipPeriod();
+        }
+
+        function updateCutterNames() {
+            const cutter1Name = document.getElementById("cutter1-name").value;
+            const cutter2Name = document.getElementById("cutter2-name").value;
+
+            document.getElementById("cutter1-heading").textContent = cutter1Name;
+            document.getElementById("cutter2-heading").textContent = cutter2Name;
+
+            document.getElementById("cutter1-episodes").previousElementSibling.textContent = `Antall episoder ${cutter1Name}:`;
+            document.getElementById("cutter2-episodes").previousElementSibling.textContent = `Antall episoder ${cutter2Name}:`;
+
+            updateClipPeriod();
+        }
+
+        function updateClipPeriod() {
+            const startDate = new Date(document.getElementById("clip-start").value);
+            const episodes = parseInt(document.getElementById("episodes").value);
+            const episodeLength = parseFloat(document.getElementById("episode-length").value);
+            const hoursPerDay = parseFloat(document.getElementById("hours-per-day").value);
+
+            const cutter1Episodes = parseInt(document.getElementById("cutter1-episodes").value);
+            const cutter2Episodes = parseInt(document.getElementById("cutter2-episodes").value);
+
+            generateClipPlan(startDate, cutter1Episodes, cutter2Episodes, episodeLength, hoursPerDay);
+        }
+
+        // Funksjon for å generere klippeplanen
+        function generateClipPlan(startDate, cutter1Episodes, cutter2Episodes, episodeLength, hoursPerDay) {
+            clearTable('#cutter-table-1');
+            clearTable('#cutter-table-2');
+            clearTable('#lyddesign-table');
+            clearTable('#grade-table');
+            clearTable('#vfx-table');
+
+            const shiftsPerEpisode = episodeLength / (7.5 / hoursPerDay); 
+            let totalShiftsUsed = 0;
+
+            let currentStartDate1 = new Date(startDate);
+            let currentStartDate2 = new Date(startDate);
+
+            for (let i = 1; i <= cutter1Episodes; i++) {
+                const cutterEndDate = addWorkdays(currentStartDate1, shiftsPerEpisode);
+                addRow('#cutter-table-1', document.getElementById("cutter1-name").value, i, currentStartDate1, getWeekNumber(currentStartDate1), cutterEndDate);
+                addRow('#lyddesign-table', 'Lyddesign', i, currentStartDate1, getWeekNumber(currentStartDate1), cutterEndDate);
+                addRow('#grade-table', 'Grade', i, currentStartDate1, getWeekNumber(currentStartDate1), cutterEndDate);
+                addRow('#vfx-table', 'VFX', i, currentStartDate1, getWeekNumber(currentStartDate1), cutterEndDate);
+                currentStartDate1 = addWorkdays(cutterEndDate, 1);
+                totalShiftsUsed += shiftsPerEpisode;
+            }
+
+            for (let i = 1; i <= cutter2Episodes; i++) {
+                const cutterEndDate = addWorkdays(currentStartDate2, shiftsPerEpisode);
+                addRow('#cutter-table-2', document.getElementById("cutter2-name").value, i + cutter1Episodes, currentStartDate2, getWeekNumber(currentStartDate2), cutterEndDate);
+                addRow('#lyddesign-table', 'Lyddesign', i + cutter1Episodes, currentStartDate2, getWeekNumber(currentStartDate2), cutterEndDate);
+                addRow('#grade-table', 'Grade', i + cutter1Episodes, currentStartDate2, getWeekNumber(currentStartDate2), cutterEndDate);
+                addRow('#vfx-table', 'VFX', i + cutter1Episodes, currentStartDate2, getWeekNumber(currentStartDate2), cutterEndDate);
+                currentStartDate2 = addWorkdays(cutterEndDate, 1);
+                totalShiftsUsed += shiftsPerEpisode;
+            }
+
+            const lastEndDate = (currentStartDate1 > currentStartDate2) ? currentStartDate1 : currentStartDate2;
+            document.getElementById("clip-end").value = formatDateForInput(lastEndDate);
+
+            updateTotalShiftsAndCost(totalShiftsUsed);
+        }
+
+        function updateTotalShiftsAndCost(totalShiftsUsed) {
+            const totalShifts = Math.floor(totalShiftsUsed);
+            document.getElementById("total-shifts").value = totalShifts;
+
+            const totalCost = totalShifts * hourlyRate * 7.5;
+            document.getElementById("total-cost").value = totalCost.toLocaleString('no-NO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' NOK';
+        }
+
+        function clearTable(tableSelector) {
+            const tableBody = document.querySelector(`${tableSelector} tbody`);
+            tableBody.innerHTML = '';
+        }
+
+        function addWorkdays(startDate, days) {
+            let resultDate = new Date(startDate);
+            let addedDays = 0;
+            while (addedDays < days) {
+                resultDate.setDate(resultDate.getDate() + 1);
+                const dayOfWeek = resultDate.getDay();
+                if (dayOfWeek !== 0 && dayOfWeek !== 6 && !isHoliday(resultDate)) {
+                    addedDays++;
+                }
+            }
+            return resultDate;
+        }
+
+        function isHoliday(date) {
+            const holidayStart = new Date('2024-12-21');
+            const holidayEnd = new Date('2025-01-01');
+            return date >= holidayStart && date <= holidayEnd;
+        }
+
+        function getWeekNumber(d) {
+            d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            const dayNum = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            return Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+        }
+
+        function addRow(tableSelector, task, episode, startDate, week, endDate) {
+            const tableBody = document.querySelector(`${tableSelector} tbody`);
+            const row = document.createElement('tr');
+
+            const weekCell = document.createElement('td');
+            const taskCell = document.createElement('td');
+            const episodeCell = document.createElement('td');
+            const startCell = document.createElement('td');
+            const endCell = document.createElement('td');
+            const commentCell = document.createElement('td');
+            commentCell.classList.add('comment-cell');
+
+            // Sett en unik ID for weekCell
+            const weekCellId = `${tableSelector}-week-${episode}`;
+            weekCell.setAttribute('id', weekCellId);
+            weekCell.textContent = `Uke ${week}`;
+            
+            taskCell.innerHTML = `<input type="text" class="editable-task" value="${task}" style="width: 90%;">`;
+            episodeCell.innerHTML = `<input type="number" value="${episode}" style="width: 50px;">`;
+            
+            // Kall updateWeekNumber når oppstartsdatoen endres
+            startCell.innerHTML = `<input type="date" value="${formatDateForInput(startDate)}" onchange="updateWeekNumber(this, '${weekCellId}')">`;
+            endCell.innerHTML = `<input type="date" value="${formatDateForInput(endDate)}">`;
+
+            const episodeKey = `${tableSelector}-${episode}`;
+            const savedComment = episodeData[episodeKey]?.comment || '';
+            commentCell.innerHTML = `<input type="text" placeholder="Skriv kommentar" style="width: 90%;" value="${savedComment}" onchange="saveComment('${tableSelector}', ${episode}, this.value)">`;
+
+            row.appendChild(weekCell);
+            row.appendChild(taskCell);
+            row.appendChild(episodeCell);
+            row.appendChild(startCell);
+            row.appendChild(endCell);
+            row.appendChild(commentCell);
+            tableBody.appendChild(row);
+        }
+
+        function saveComment(tableSelector, episode, comment) {
+            const episodeKey = `${tableSelector}-${episode}`;
+            if (!episodeData[episodeKey]) {
+                episodeData[episodeKey] = {};
+            }
+            episodeData[episodeKey].comment = comment;
+        }
+
+        function formatDateForInput(date) {
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function updateWeekNumber(dateInput, weekCellId) {
+            const date = new Date(dateInput.value);
+            const weekNumber = getWeekNumber(date);
+            document.getElementById(weekCellId).textContent = `Uke ${weekNumber}`;
+        }
+
+        // PDF nedlastingsfunksjon
+        function downloadPDF() {
+            const tvTitle = document.getElementById("tv-title").value || "UtenTittel";
+            const element = document.body;
+            const opt = {
+                margin: 1,
+                filename: `Klippeplan_${tvTitle}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'pt', format: 'a4', orientation: 'portrait' },
+                background: true
+            };
+            html2pdf().from(element).set(opt).save();
+        }
+
+        document.getElementById("download-pdf").addEventListener("click", downloadPDF);
+        document.getElementById("download-pdf-bottom").addEventListener("click", downloadPDF);
+
+        // Initialiser planen
+        generateClipPlan(new Date('2024-10-21'), 4, 4, 20, 7.5);
+    </script>
+
+    <!-- Inkluder html2pdf library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+
+</body>
+</html>
